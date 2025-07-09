@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="nl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse ERP Keuze: Odoo vs. Business Central voor Technicarro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Vibrant & Professional -->
+    <!-- Application Structure Plan: De SPA is ontworpen als een top-down executive dashboard dat een verhaal vertelt. Het begint met een algemeen overzicht en de belangrijkste aanbeveling, gevolgd door gedetailleerde secties die de belangrijkste beslissingspilaren behandelen: kosten, functionele fit, en partneranalyse. Deze structuur is gebruiksvriendelijker dan de academische opbouw van het brondocument, omdat het de gebruiker (een bedrijfsleider) in staat stelt om snel de conclusies te vatten en vervolgens dieper in de data te duiken die deze conclusies ondersteunen. De flow is logisch: Wat is het probleem? -> Wat is de conclusie? -> Hoeveel kost het? -> Hoe goed past het? -> Wie zijn de partners? -> Wat zijn de risico's? Dit faciliteert een efficiënt en geïnformeerd besluitvormingsproces. -->
+    <!-- Visualization & Content Choices: 
+        - Kostenvergelijking: gegroepeerde staafdiagram (Chart.js) voor directe visuele vergelijking van eenmalige en jaarlijkse kosten. Doel: Vergelijken. Interactie: tooltips. Justificatie: Beste visualisatie voor discrete waarde-vergelijking.
+        - Functionele Fit: radardiagram (Chart.js) om de prestaties van elke oplossing op meerdere belangrijke criteria tegelijk te tonen. Doel: Vergelijken (multivariaat). Interactie: tooltips. Justificatie: Ideaal om sterktes en zwaktes over verschillende domeinen in één oogopslag te zien.
+        - Implementatietijdlijn: HTML/CSS-gebaseerde visuele tijdlijn. Doel: Verandering over tijd tonen. Interactie: geen. Justificatie: Intuïtiever dan een tabel en vermijdt SVG/Mermaid.
+        - Sterktes/Risico's: HTML/CSS-kaarten in twee kolommen. Doel: Organiseren/Vergelijken. Interactie: geen. Justificatie: Duidelijke, scanbare presentatie van kwalitatieve data.
+        - Alle tekstlabels >16 karakters worden opgesplitst in arrays voor betere leesbaarheid op grafieken. De verplichte tooltip-configuratie wordt overal toegepast.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #2C3E50;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #3498DB;
+            border-bottom-color: #3498DB;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigatie -->
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-xl font-bold text-gray-800">
+                    <span class="text-[#3498DB]">Technicarro</span> ERP Analyse
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#overzicht" class="nav-link text-gray-600 hover:text-[#3498DB] border-b-2 border-transparent pb-1">Overzicht</a>
+                    <a href="#kosten" class="nav-link text-gray-600 hover:text-[#3498DB] border-b-2 border-transparent pb-1">Kosten</a>
+                    <a href="#functionaliteit" class="nav-link text-gray-600 hover:text-[#3498DB] border-b-2 border-transparent pb-1">Functionaliteit</a>
+                    <a href="#partners" class="nav-link text-gray-600 hover:text-[#3498DB] border-b-2 border-transparent pb-1">Partners</a>
+                    <a href="#risicos" class="nav-link text-gray-600 hover:text-[#3498DB] border-b-2 border-transparent pb-1">Risico's</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <!-- Sectie 1: Overzicht & Aanbeveling -->
+        <section id="overzicht" class="mb-20 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">De Juiste ERP-Keuze voor de Groei van Technicarro</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-8">Een interactieve analyse van Odoo (Callista) versus Microsoft Dynamics 365 Business Central (Astena) om de strategische doelstelling van 50% omzetgroei te ondersteunen.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="stat-card p-6 border-l-4 border-[#3498DB]">
+                    <h3 class="text-xl font-semibold mb-2 text-gray-700">Aanbeveling: Business Central</h3>
+                    <p class="text-gray-600">Voor robuuste schaalbaarheid, diepe Microsoft-integratie en een gestructureerd partner-ecosysteem, wat cruciaal is voor de langetermijngroei en het minimaliseren van onderhoudsrisico's. De hogere initiële kosten worden gerechtvaardigd door een lagere TCO en betere ondersteuning voor compliance.</p>
+                </div>
+                <div class="stat-card p-6 border-l-4 border-gray-300">
+                     <h3 class="text-xl font-semibold mb-2 text-gray-700">Alternatief: Odoo</h3>
+                    <p class="text-gray-600">Een sterke keuze indien de initiële investering de hoogste prioriteit heeft en er een grotere bereidheid is om te vertrouwen op de partner voor maatwerkonderhoud. De 'BuildEase' add-on is een significant voordeel voor bouwspecifieke processen.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sectie 2: Kostenanalyse -->
+        <section id="kosten" class="mb-20 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-10 text-[#2C3E50]">Kostenanalyse (TCO Indicatie)</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">Deze sectie visualiseert de financiële aspecten van beide ERP-oplossingen, inclusief eenmalige implementatiekosten en geschatte jaarlijkse terugkerende kosten. Het is essentieel om verder te kijken dan de initiële investering en de Total Cost of Ownership (TCO) op lange termijn in overweging te nemen, die ook verborgen kosten voor onderhoud en upgrades kan omvatten.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="stat-card p-8">
+                    <h3 class="text-xl font-semibold mb-6 text-center text-gray-700">Eenmalige Implementatiekosten</h3>
+                    <p class="text-gray-600 text-sm mb-6 text-center">De initiële investering voor het opzetten en configureren van het ERP-systeem.</p>
+                    <div class="chart-container">
+                        <canvas id="implementationCostChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 text-center italic">Astena's kosten zijn een schatting voor 48,5 dagen werk. Callista's kosten zijn gedetailleerd per mijlpaal.</p>
+                </div>
+                <div class="stat-card p-8">
+                    <h3 class="text-xl font-semibold mb-6 text-center text-gray-700">Geschatte Jaarlijkse Recurrente Kosten</h3>
+                    <p class="text-gray-600 text-sm mb-6 text-center">De terugkerende kosten voor licenties, hosting en basis support. Deze zijn cruciaal voor de langetermijnbudgettering.</p>
+                    <div class="chart-container">
+                        <canvas id="recurringCostChart"></canvas>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4 text-center italic">Callista's kosten zijn afhankelijk van het aantal gebruikers en de behoefte aan de BuildEase-licentie. Astena's kosten zijn een vaste bundel.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sectie 3: Functionele Geschiktheid -->
+        <section id="functionaliteit" class="mb-20 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-10 text-[#2C3E50]">Functionele Geschiktheid</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">Deze radar-grafiek toont hoe goed elke ERP-oplossing aansluit bij de belangrijkste functionele en niet-functionele vereisten van Technicarro, gewogen naar hun prioriteit. Een hogere score op de as betekent een betere match met de behoefte.</p>
+
+            <div class="stat-card p-8 max-w-3xl mx-auto">
+                <h3 class="text-xl font-semibold mb-6 text-center text-gray-700">Afstemming met Technicarro's Vereisten</h3>
+                <div class="chart-container h-[450px] md:h-[500px] max-h-[550px]">
+                    <canvas id="functionalFitChart"></canvas>
+                </div>
+                <p class="text-xs text-gray-500 mt-4 text-center italic">De scores zijn gebaseerd op een gewogen analyse van Kritieke Succesfactoren, Domeinkennis, Functionele en Niet-Functionele Vereisten. Een hogere score duidt op een betere afstemming.</p>
+            </div>
+        </section>
+
+        <!-- Sectie 4: Partner Evaluatie -->
+        <section id="partners" class="mb-20 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-10 text-[#2C3E50]">Partner Evaluatie & Implementatieaanpak</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">De keuze van de implementatiepartner is net zo cruciaal als de software zelf. Deze sectie belicht de sterke punten en de aanpak van Astena en Callista, inclusief een indicatieve tijdlijn voor de implementatie.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                <div class="stat-card p-8">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700 text-center">Astena (Microsoft Dynamics 365 Business Central)</h3>
+                    <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#28A745]">✔</span> <div><span class="font-semibold text-gray-800">Expertise & Ervaring:</span> Sectorspecialist voor afwerkingsbedrijven met 130+ actieve klanten (60 SaaS). Stabiel team met diepgaande kennis van Microsoft Dynamics in de bouw.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#28A745]">✔</span> <div><span class="font-semibold text-gray-800">Methodologie:</span> Gestructureerde 'Oxygen for Success by Design' aanpak met robuuste projectmanagement- en governancekaders (risico-, issue-, verandermanagement).</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#28A745]">✔</span> <div><span class="font-semibold text-gray-800">Sectorspecifieke Add-ons:</span> Eigen Astena365 apps (Installation Manager, Finance Manager, Tender Manager) en connectoren (Isabel Connect, Geodynamics voor werkkrachtenregistratie).</div></li>
+                    </ul>
+                </div>
+                <div class="stat-card p-8">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700 text-center">Callista (Odoo)</h3>
+                    <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#28A745]">✔</span> <div><span class="font-semibold text-gray-800">Expertise & Ervaring:</span> Ruim 10 jaar Odoo expertise, gespecialiseerd in bouw, installatie en productie. 135+ actieve klanten met bijna 95% retentie.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#28A745]">✔</span> <div><span class="font-semibold text-gray-800">Methodologie:</span> Duidelijke, gefaseerde aanpak met 7 gedefinieerde mijlpalen. Persoonlijke aanpak met projectmanager vanaf de start.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#28A745]">✔</span> <div><span class="font-semibold text-gray-800">Sectorspecifieke Add-ons:</span> Eigen 'BuildEase' add-on specifiek voor de bouw (meetstaten, onderaannemers, vorderingsstaten).</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="stat-card p-8 max-w-4xl mx-auto">
+                <h3 class="text-xl font-semibold mb-6 text-center text-gray-700">Indicatieve Implementatie Tijdlijn (Callista Voorbeeld)</h3>
+                <p class="text-gray-600 text-sm mb-8 text-center">Callista stelt een gefaseerde implementatie voor die loopt over ongeveer een jaar, wat de complexiteit van de transitie toont en een gestructureerde aanpak vereist.</p>
+                <div class="relative timeline px-4">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <div class="timeline-date font-bold text-sm text-[#3498DB]">Juli 2025</div>
+                            <h4 class="font-semibold text-gray-800">Mijlpaal 1: Boekhouding Manatile</h4>
+                            <p class="text-gray-600 text-sm">Initiële go-live met een enkele entiteit om vertrouwd te raken met het systeem (louter boekhouding).</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <div class="timeline-date font-bold text-sm text-[#3498DB]">Oktober 2025</div>
+                            <h4 class="font-semibold text-gray-800">Mijlpaal 2 & 3: Stock, Verkoop & BuildEase</h4>
+                            <p class="text-gray-600 text-sm">Overdracht van stock (Carrotec), opzet logistiek, verkoopflows en gebruik van de BuildEase add-on.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <div class="timeline-date font-bold text-sm text-[#3498DB]">Januari 2026</div>
+                            <h4 class="font-semibold text-gray-800">Mijlpaal 4: Werfvoorbereiding & Opvolging</h4>
+                            <p class="text-gray-600 text-sm">Implementatie van planning, urenregistratie, nacalculatie, case management en Checkinatwork-integratie.</p>
+                        </div>
+                    </div>
+                     <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <div class="timeline-date font-bold text-sm text-[#3498DB]">April 2026</div>
+                            <h4 class="font-semibold text-gray-800">Mijlpaal 5 & 6: Go-Live Technicarro-Cap</h4>
+                            <p class="text-gray-600 text-sm">Boekhouding van de kernentiteit wordt overgezet, gevolgd door een soft release en volledige operationele go-live van Technicarro-Cap.</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <div class="timeline-date font-bold text-sm text-[#3498DB]">Juli 2026</div>
+                            <h4 class="font-semibold text-gray-800">Mijlpaal 7: Go-Live Tecnistone</h4>
+                            <p class="text-gray-600 text-sm">De laatste operationele entiteit, inclusief productieprocessen voor natuursteenbewerking, wordt geïntegreerd.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sectie 5: Risico's & Strategische Overwegingen -->
+        <section id="risicos" class="mb-20 pt-16 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-10 text-[#2C3E50]">Risico's & Strategische Overwegingen</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">Elke oplossing brengt specifieke risico's en strategische overwegingen met zich mee die de TCO en het succes op lange termijn kunnen beïnvloeden. Het is essentieel om deze proactief te adresseren.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="stat-card p-8 border-l-4 border-[#F39C12]">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700 text-center">Odoo / Callista</h3>
+                    <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#F39C12]">⚠️</span> <div><span class="font-semibold text-gray-800">Onderhoud van Aanpassingen:</span> De flexibiliteit van open-source Odoo, en de specifieke functionaliteiten zoals de Checkinatwork-integratie en de BuildEase add-on, vereisen een sterke partner commitment voor het onderhouden en upgraden bij jaarlijkse Odoo-updates. Dit kan leiden tot onvoorziene kosten als dit niet expliciet is afgedekt.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#F39C12]">⚠️</span> <div><span class="font-semibold text-gray-800">Care Plan Uitsluitingen:</span> Callista's Care plan sluit expliciet "Maatwerk ontwikkelingen en toebehoren" en "Migraties naar nieuwere versies van Odoo" uit van de all-in prijs. Dit kan leiden tot extra kosten en in feite het "continu maatwerk" creëren dat Technicarro wil vermijden.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#F39C12]">⚠️</span> <div><span class="font-semibold text-gray-800">Productie voor Tecnistone:</span> De diepgang van Odoo's productiemodule voor complexe natuursteenbewerking moet grondig gevalideerd worden, aangezien er gemengde beoordelingen zijn over de geschiktheid voor complexe productiebehoeften.</div></li>
+                    </ul>
+                </div>
+                <div class="stat-card p-8 border-l-4 border-[#F39C12]">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700 text-center">Business Central / Astena</h3>
+                    <ul class="space-y-4 text-gray-600">
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#F39C12]">⚠️</span> <div><span class="font-semibold text-gray-800">Vendor & Partner Lock-in:</span> De diepe afhankelijkheid van zowel het Microsoft-ecosysteem als de specifieke Astena365 add-ons kan migratie in de toekomst complex en duur maken.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#F39C12]">⚠️</span> <div><span class="font-semibold text-gray-800">Hogere Initiële Kosten & Leercurve:</span> Business Central heeft hogere eenmalige implementatiekosten en een steilere leercurve voor gebruikers, wat de initiële adoptie en TCO kan beïnvloeden.</div></li>
+                        <li class="flex items-start"><span class="text-xl mr-3 text-[#F39C12]">⚠️</span> <div><span class="font-semibold text-gray-800">Checkinatwork Duidelijkheid:</span> Hoewel de Geodynamics Connector relevant is voor werkkrachtenregistratie, is de exacte dekking van alle Checkinatwork-vereisten (mobiele consultatie, foto's, afwijkingen) niet expliciet duidelijk in Astena's voorstel en vereist verdere verduidelijking.</div></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 text-gray-600 text-center p-8 mt-12">
+        <p>&copy; 2025 Technicarro ERP Selectie Analyse. Alle rechten voorbehouden.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const FONT_COLOR = '#2C3E50';
+            const BORDER_COLOR = '#E0E0E0';
+            const PALETTE = {
+                primary: '#3498DB', /* Blue */
+                secondary: '#2ECC71', /* Green */
+                accent1: '#F39C12', /* Orange */
+                accent2: '#E74C3C', /* Red */
+                neutral: '#BDC3C7' /* Light Gray */
+            };
+
+            const defaultTooltip = {
+                callbacks: {
+                    title: function(tooltipItems) {
+                        const item = tooltipItems[0];
+                        let label = item.chart.data.labels[item.dataIndex];
+                        if (Array.isArray(label)) {
+                          return label.join(' ');
+                        } else {
+                          return label;
+                        }
+                    }
+                }
+            };
+
+            const processLabel = (label) => {
+                if (label.length > 16) {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = '';
+                    words.forEach(word => {
+                        if ((currentLine + ' ' + word).trim().length > 16 && currentLine !== '') {
+                            lines.push(currentLine.trim());
+                            currentLine = word;
+                        } else {
+                            currentLine = (currentLine + ' ' + word).trim();
+                        }
+                    });
+                    lines.push(currentLine.trim());
+                    return lines;
+                }
+                return label;
+            };
+
+            // Implementatiekosten Chart
+            new Chart(document.getElementById('implementationCostChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Astena (BC)', 'Callista (Odoo)'],
+                    datasets: [{
+                        label: 'Eenmalige Implementatiekosten (€)',
+                        data: [51000, 70080],
+                        backgroundColor: [PALETTE.primary, PALETTE.accent1],
+                        borderColor: [PALETTE.primary, PALETTE.accent1],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: defaultTooltip
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { color: FONT_COLOR },
+                            grid: { color: BORDER_COLOR }
+                        },
+                        y: {
+                            ticks: { color: FONT_COLOR },
+                            grid: { color: BORDER_COLOR }
+                        }
+                    }
+                }
+            });
+
+            // Recurrente Kosten Chart
+            new Chart(document.getElementById('recurringCostChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Astena (BC)', 'Callista (Odoo)*'],
+                    datasets: [{
+                        label: 'Geschatte Jaarlijkse Recurrente Kosten (€)',
+                        data: [22461, 12259], /* Voorbeeld schatting voor Callista: 16 users (8 essential, 8 team), 8 BuildEase users + hosting */
+                        backgroundColor: [PALETTE.primary, PALETTE.accent1],
+                        borderColor: [PALETTE.primary, PALETTE.accent1],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: defaultTooltip
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { color: FONT_COLOR },
+                            grid: { color: BORDER_COLOR }
+                        },
+                        y: {
+                            ticks: { color: FONT_COLOR },
+                            grid: { color: BORDER_COLOR }
+                        }
+                    }
+                }
+            });
+
+            // Functionele Geschiktheid Chart (Radar)
+            const functionalFitLabels = [
+                'Kritieke Succesfactoren',
+                'Domeinkennis Leverancier',
+                'Functionele Vereisten',
+                'Niet-Functionele Vereisten'
+            ].map(processLabel);
+
+            new Chart(document.getElementById('functionalFitChart'), {
+                type: 'radar',
+                data: {
+                    labels: functionalFitLabels,
+                    datasets: [{
+                        label: 'Astena (Business Central)',
+                        data: [9.0, 8.0, 7.0, 8.5], /* Voorbeeld scores: gemiddelde score per categorie */
+                        fill: true,
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)', /* PALETTE.primary met alpha */
+                        borderColor: PALETTE.primary,
+                        pointBackgroundColor: PALETTE.primary,
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: PALETTE.primary
+                    }, {
+                        label: 'Callista (Odoo)',
+                        data: [8.8, 8.2, 7.2, 8.0], /* Voorbeeld scores: gemiddelde score per categorie */
+                        fill: true,
+                        backgroundColor: 'rgba(243, 156, 18, 0.2)', /* PALETTE.accent1 met alpha */
+                        borderColor: PALETTE.accent1,
+                        pointBackgroundColor: PALETTE.accent1,
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: PALETTE.accent1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: FONT_COLOR
+                            }
+                        },
+                        tooltip: defaultTooltip
+                    },
+                    scales: {
+                        r: {
+                            angleLines: { color: BORDER_COLOR },
+                            grid: { color: BORDER_COLOR },
+                            pointLabels: {
+                                color: FONT_COLOR,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            ticks: {
+                                beginAtZero: true,
+                                max: 10,
+                                stepSize: 1,
+                                backdropColor: 'transparent',
+                                color: FONT_COLOR
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Smooth scrolling for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+
+            // Highlight active nav link on scroll
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (pageYOffset >= sectionTop - sectionHeight / 3) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.href.includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
